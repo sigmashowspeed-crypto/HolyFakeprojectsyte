@@ -35,6 +35,8 @@ jobs:
         run: pnpm run build
       - name: Pages uchun tayyorlash
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Tayyor saytni yuklash
         uses: actions/upload-pages-artifact@v3
         with:

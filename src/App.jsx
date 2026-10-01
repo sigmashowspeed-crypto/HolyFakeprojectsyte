@@ -3,7 +3,7 @@ import gsap from "gsap";
 import JourneyScene from "./components/JourneyScene";
 import { content } from "./content";
 
-const stopProgress = [0.08, 0.22, 0.36, 0.5, 0.64];
+const stopProgress = [0.05, 0.19, 0.33, 0.47, 0.61];
 
 function useReducedMotion() {
   const [reduced, setReduced] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -27,14 +27,14 @@ function ScrollHint({ hidden }) {
   );
 }
 
-function Intro({ onBegin, introRef }) {
+function Intro({ onBegin, introRef, launching }) {
   return (
     <section className="intro" ref={introRef} aria-labelledby="intro-title">
       <div className="intro-glow" />
       <div className="intro-copy">
         <p className="eyebrow">{content.intro.eyebrow}</p>
         <h1 id="intro-title">{content.intro.title}</h1>
-        <button type="button" onClick={onBegin}>
+        <button type="button" onClick={onBegin} disabled={launching} className={launching ? "is-launching" : ""}>
           <span>{content.intro.button}</span>
           <b aria-hidden="true">✦</b>
         </button>
@@ -138,9 +138,13 @@ function Finale({ active, celebrated }) {
 
 function App() {
   const [started, setStarted] = useState(false);
+  const [introVisible, setIntroVisible] = useState(true);
+  const [launching, setLaunching] = useState(false);
   const [progress, setProgress] = useState(0);
   const [celebrated, setCelebrated] = useState(false);
   const progressRef = useRef(0);
+  const targetProgressRef = useRef(0);
+  const progressStateRef = useRef(0);
   const introRef = useRef(null);
   const reducedMotion = useReducedMotion();
 
@@ -150,50 +154,77 @@ function App() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = started ? "" : "hidden";
+    document.body.style.overflow = introVisible ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [started]);
+  }, [introVisible]);
 
   useEffect(() => {
     if (!started) return undefined;
     let frame = 0;
-    const update = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const max = document.documentElement.scrollHeight - window.innerHeight;
-        const next = max > 0 ? window.scrollY / max : 0;
-        progressRef.current = next;
-        setProgress(next);
-        if (next > 0.905) setCelebrated(true);
-      });
+    let previousTime = performance.now();
+    const readScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      targetProgressRef.current = max > 0 ? window.scrollY / max : 0;
     };
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update, { passive: true });
+    const render = (time) => {
+      const delta = Math.min(0.05, (time - previousTime) / 1000);
+      previousTime = time;
+      const target = targetProgressRef.current;
+      const alpha = reducedMotion ? 1 : 1 - Math.exp(-delta * 7.5);
+      const next = Math.abs(target - progressRef.current) < 0.0001
+        ? target
+        : progressRef.current + (target - progressRef.current) * alpha;
+      progressRef.current = next;
+      if (Math.abs(next - progressStateRef.current) > 0.0015 || next === target) {
+        progressStateRef.current = next;
+        setProgress(next);
+      }
+      if (target > 0.905) setCelebrated(true);
+      frame = requestAnimationFrame(render);
+    };
+    readScroll();
+    frame = requestAnimationFrame(render);
+    window.addEventListener("scroll", readScroll, { passive: true });
+    window.addEventListener("resize", readScroll, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", readScroll);
+      window.removeEventListener("resize", readScroll);
     };
-  }, [started]);
+  }, [started, reducedMotion]);
 
   const begin = () => {
+    if (launching) return;
+    setLaunching(true);
+    window.scrollTo({ top: 0, behavior: "instant" });
+    progressRef.current = 0;
+    targetProgressRef.current = 0;
+    progressStateRef.current = 0;
+    setProgress(0);
+    setStarted(true);
     const duration = reducedMotion ? 0.2 : 1.05;
-    gsap.to(introRef.current, {
-      opacity: 0,
-      scale: reducedMotion ? 1 : 1.045,
-      duration,
-      ease: "power2.inOut",
-      onComplete: () => {
-        document.body.style.overflow = "";
-        progressRef.current = 0;
-        setProgress(0);
-        setStarted(true);
-        requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
-      },
-    });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const copy = introRef.current?.querySelector(".intro-copy");
+      const glow = introRef.current?.querySelector(".intro-glow");
+      const timeline = gsap.timeline({ onComplete: () => setIntroVisible(false) });
+      timeline.to(glow, {
+        scale: reducedMotion ? 1 : 1.28,
+        opacity: 0.12,
+        duration: duration * 0.82,
+        ease: "power2.out",
+      }, 0).to(copy, {
+        y: reducedMotion ? 0 : -16,
+        opacity: 0,
+        duration: duration * 0.7,
+        ease: "power2.in",
+      }, 0.08).to(introRef.current, {
+        opacity: 0,
+        duration,
+        ease: "power2.inOut",
+      }, 0.16);
+    }));
   };
 
   const activeStop = progress < 0.69
@@ -202,18 +233,24 @@ function App() {
     ), 0)
     : -1;
   const finaleActive = progress >= 0.9;
+  const atmosphereClass = finaleActive
+    ? "is-finale"
+    : progress >= 0.69
+      ? "is-pride"
+      : `stage-${Math.max(0, activeStop)}`;
 
   return (
-    <main className={`app ${started ? "has-started" : ""}`}>
+    <main className={`app ${started ? "has-started" : ""} ${atmosphereClass}`}>
       <div className="scene" aria-hidden="true">
         <Suspense fallback={null}>
           <JourneyScene progressRef={progressRef} reducedMotion={reducedMotion} started={started} />
         </Suspense>
+        <div className="scene-atmosphere" />
         <div className="scene-vignette" />
         <div className="scene-grain" />
       </div>
 
-      {!started && <Intro onBegin={begin} introRef={introRef} />}
+      {introVisible && <Intro onBegin={begin} introRef={introRef} launching={launching} />}
 
       <div className="journey-content">
         <header className={`journey-header ${progress >= 0.69 ? "is-hidden" : ""}`}>
@@ -234,9 +271,14 @@ function App() {
         </aside>
 
         <div className="cards" aria-live="polite">
-          {content.stops.map((stop, index) => (
-            <StopCard key={stop.place} stop={stop} index={index} active={activeStop === index && progress < 0.69} />
-          ))}
+          {activeStop >= 0 && progress < 0.69 && (
+            <StopCard
+              key={content.stops[activeStop].place}
+              stop={content.stops[activeStop]}
+              index={activeStop}
+              active
+            />
+          )}
         </div>
 
         <Pride progress={progress} />

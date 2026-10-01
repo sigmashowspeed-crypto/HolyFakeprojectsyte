@@ -20,7 +20,7 @@ const cameraCurve = new THREE.CatmullRomCurve3(
 );
 
 const stopAngles = [-0.41, -1.21, -2.03, -2.8, 2.7];
-const stopProgress = [0.08, 0.22, 0.36, 0.5, 0.64];
+const stopProgress = [0.05, 0.19, 0.33, 0.47, 0.61];
 
 function seeded(index, salt = 0) {
   const x = Math.sin(index * 91.17 + salt * 37.43) * 43758.5453;
@@ -86,6 +86,56 @@ function Stem({ height = 0.8, color = "#49755b", position = [0, 0, 0] }) {
   );
 }
 
+function GrassTuft({ position, scale = 1 }) {
+  return (
+    <group position={position} scale={scale}>
+      {[-0.055, 0, 0.055].map((x, index) => (
+        <mesh key={x} position={[x, 0.12 + index * 0.025, 0]} rotation={[0, 0, (index - 1) * 0.24]}>
+          <coneGeometry args={[0.027, 0.3 + index * 0.04, 5]} />
+          <meshStandardMaterial color={index === 1 ? "#5d8866" : "#77a477"} flatShading />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function GardenDetails({ index }) {
+  const grass = useMemo(
+    () => Array.from({ length: 14 }, (_, itemIndex) => ({
+      position: [
+        (seeded(itemIndex, index + 32) - 0.5) * 2.55,
+        0.02,
+        (seeded(itemIndex, index + 42) - 0.5) * 1.25,
+      ],
+      scale: 0.65 + seeded(itemIndex, index + 52) * 0.55,
+    })),
+    [index],
+  );
+  const rocks = useMemo(
+    () => Array.from({ length: 5 }, (_, itemIndex) => ({
+      position: [
+        (seeded(itemIndex, index + 62) - 0.5) * 2.45,
+        0.055,
+        (seeded(itemIndex, index + 72) - 0.5) * 1.1,
+      ],
+      scale: 0.07 + seeded(itemIndex, index + 82) * 0.08,
+    })),
+    [index],
+  );
+
+  return (
+    <group>
+      {grass.map((item, itemIndex) => <GrassTuft key={itemIndex} {...item} />)}
+      {rocks.map((item, itemIndex) => (
+        <mesh key={itemIndex} position={item.position} scale={item.scale}>
+          <dodecahedronGeometry args={[1, 0]} />
+          <meshStandardMaterial color={itemIndex % 2 ? "#d6c3a3" : "#bba98c"} flatShading />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function Tulip({ position, color, scale = 1 }) {
   return (
     <group position={position} scale={scale}>
@@ -99,27 +149,68 @@ function Tulip({ position, color, scale = 1 }) {
   );
 }
 
-function SakuraTree() {
-  const blossoms = useMemo(
-    () => Array.from({ length: 20 }, (_, i) => ({
-      position: [
-        (seeded(i, 2) - 0.5) * 2.1,
-        1.25 + seeded(i, 3) * 1.35,
-        (seeded(i, 4) - 0.5) * 1.2,
-      ],
-      scale: 0.65 + seeded(i, 5) * 0.6,
-    })),
-    [],
+function SakuraBlossom({ position, scale = 1, pale = false }) {
+  return (
+    <group position={position} scale={scale}>
+      {Array.from({ length: 5 }, (_, index) => {
+        const angle = (index / 5) * Math.PI * 2;
+        return (
+          <Petal
+            key={index}
+            color={pale ? "#ffe5ed" : "#f7adc7"}
+            position={[Math.cos(angle) * 0.12, Math.sin(angle) * 0.12, 0]}
+            rotation={[0, 0, angle - Math.PI / 2]}
+            scale={[0.82, 1.08, 0.42]}
+          />
+        );
+      })}
+      <mesh position={[0, 0, 0.06]}>
+        <sphereGeometry args={[0.045, 7, 5]} />
+        <meshStandardMaterial color="#e6b84e" flatShading />
+      </mesh>
+    </group>
   );
+}
+
+function Branch({ position, length, rotation }) {
+  return (
+    <mesh position={position} rotation={rotation}>
+      <cylinderGeometry args={[0.035, 0.07, length, 7]} />
+      <meshStandardMaterial color="#765047" flatShading roughness={0.9} />
+    </mesh>
+  );
+}
+
+function SakuraTree() {
+  const blossoms = [
+    [-0.78, 1.55, 0.02],
+    [-0.58, 1.82, 0.08],
+    [-0.34, 1.48, 0.12],
+    [-0.18, 2.02, -0.03],
+    [0.08, 1.73, 0.12],
+    [0.34, 2.05, 0.03],
+    [0.55, 1.7, 0.08],
+    [0.78, 1.9, -0.02],
+    [0.18, 2.25, 0.04],
+  ];
 
   return (
     <group>
-      <mesh position={[0, 0.78, 0]} rotation={[0, 0, -0.08]}>
-        <cylinderGeometry args={[0.11, 0.18, 1.65, 7]} />
-        <meshStandardMaterial color="#7b594f" flatShading />
+      <mesh position={[0, 0.72, 0]} rotation={[0, 0, -0.035]}>
+        <cylinderGeometry args={[0.075, 0.15, 1.5, 7]} />
+        <meshStandardMaterial color="#765047" flatShading roughness={0.9} />
       </mesh>
-      {blossoms.map((item, index) => (
-        <Petal key={index} color={index % 3 ? "#ffbdd3" : "#ffe0ea"} {...item} />
+      <Branch position={[-0.29, 1.33, 0]} length={0.88} rotation={[0, 0, -0.84]} />
+      <Branch position={[0.32, 1.47, 0]} length={0.94} rotation={[0, 0, 0.8]} />
+      <Branch position={[-0.07, 1.72, 0.02]} length={0.72} rotation={[0, 0, -0.22]} />
+      <Branch position={[0.18, 1.87, 0.01]} length={0.62} rotation={[0, 0, 0.38]} />
+      {blossoms.map((position, index) => (
+        <SakuraBlossom
+          key={index}
+          position={position}
+          scale={0.78 + (index % 3) * 0.09}
+          pale={index % 3 === 0}
+        />
       ))}
     </group>
   );
@@ -219,9 +310,12 @@ function FlowerPatch({ index, progressRef, reducedMotion }) {
   );
 
   useFrame((state, delta) => {
-    const distance = Math.abs(progressRef.current - stopProgress[index]);
-    const target = distance < 0.13 ? 1 : 0.16;
-    const rate = reducedMotion ? 8 : 3.8;
+    const progress = progressRef.current;
+    const nearest = stopProgress.reduce((best, point, stopIndex) => (
+      Math.abs(point - progress) < Math.abs(stopProgress[best] - progress) ? stopIndex : best
+    ), 0);
+    const target = progress < 0.69 && nearest === index ? 1 : 0.015;
+    const rate = reducedMotion ? 12 : 7.5;
     const value = THREE.MathUtils.damp(flowerGroup.current.scale.x, target, rate, delta);
     flowerGroup.current.scale.setScalar(value);
     if (!reducedMotion) {
@@ -233,9 +327,13 @@ function FlowerPatch({ index, progressRef, reducedMotion }) {
     <group ref={group} position={position} rotation={rotation}>
       <mesh position={[0, -0.14, 0]} scale={[1.45, 0.16, 0.82]}>
         <sphereGeometry args={[1, 12, 7]} />
-        <meshStandardMaterial color={index === 4 ? "#547f69" : "#78976c"} flatShading />
+        <meshStandardMaterial
+          color={["#81a875", "#86a681", "#7e9871", "#98a66f", "#5e8973"][index]}
+          flatShading
+        />
       </mesh>
       <group ref={flowerGroup}>
+        <GardenDetails index={index} />
         {index === 0 && flowers.map((item, i) => <Tulip key={i} {...item} />)}
         {index === 1 && <SakuraTree />}
         {index === 2 && flowers.map((item, i) => <Lavender key={i} position={item.position} scale={item.scale} />)}
@@ -250,28 +348,34 @@ function Planet({ progressRef, reducedMotion }) {
   const patches = useMemo(
     () => Array.from({ length: 13 }, (_, i) => ({
       angle: seeded(i, 20) * Math.PI * 2,
-      y: (seeded(i, 21) - 0.5) * 2.6,
-      scale: 0.22 + seeded(i, 22) * 0.4,
+      radial: 0.45 + seeded(i, 21) * 2.65,
+      scaleX: 0.3 + seeded(i, 22) * 0.52,
+      scaleZ: 0.25 + seeded(i, 23) * 0.46,
     })),
     [],
   );
 
   return (
-    <group position={[0, -2.45, 0]}>
+    <group position={[0, -2.45, 0]} scale={0.92}>
       <mesh>
         <icosahedronGeometry args={[3.55, 3]} />
-        <meshStandardMaterial color="#6d987d" flatShading roughness={0.92} />
+        <meshStandardMaterial color="#709c83" flatShading roughness={0.86} />
       </mesh>
       {patches.map((patch, i) => {
-        const radial = Math.sqrt(Math.max(0.2, 3.3 ** 2 - patch.y ** 2));
+        const y = Math.sqrt(Math.max(0.2, 3.48 ** 2 - patch.radial ** 2));
         return (
           <mesh
             key={i}
-            position={[Math.sin(patch.angle) * radial, patch.y, Math.cos(patch.angle) * radial]}
-            scale={patch.scale}
+            position={[
+              Math.sin(patch.angle) * patch.radial,
+              y + 0.015,
+              Math.cos(patch.angle) * patch.radial,
+            ]}
+            scale={[patch.scaleX, 0.05, patch.scaleZ]}
+            rotation={[0, -patch.angle, 0]}
           >
             <icosahedronGeometry args={[1, 1]} />
-            <meshStandardMaterial color={i % 2 ? "#8eb497" : "#5f8876"} flatShading />
+            <meshStandardMaterial color={i % 2 ? "#83ad78" : "#5f8b74"} flatShading />
           </mesh>
         );
       })}
@@ -283,13 +387,24 @@ function Planet({ progressRef, reducedMotion }) {
 function Balloon({ progressRef, reducedMotion }) {
   const group = useRef();
   const target = useMemo(() => new THREE.Vector3(), []);
+  const offset = useMemo(() => new THREE.Vector3(), []);
+  const { camera, size } = useThree();
 
   useFrame((state, delta) => {
     const p = progressRef.current;
-    const angle = p * Math.PI * 1.88 + 0.35;
     const finaleDrop = Math.max(0, (p - 0.86) / 0.14);
-    target.set(Math.sin(angle) * 4.45, 1.7 - finaleDrop * 1.25, Math.cos(angle) * 4.45);
-    group.current.position.lerp(target, 1 - Math.exp(-delta * 2.2));
+    const compact = size.width / size.height < 0.8;
+    offset.set(compact ? 0.42 : 2.05, 0.28 - finaleDrop * 1.8, -5.5);
+    target.copy(offset).applyMatrix4(camera.matrixWorld);
+    group.current.position.lerp(target, 1 - Math.exp(-delta * 4.4));
+    group.current.rotation.x = 0;
+    group.current.rotation.y = Math.atan2(
+      camera.position.x - group.current.position.x,
+      camera.position.z - group.current.position.z,
+    );
+    const targetScale = p >= 0.69 && p < 0.86 ? 0.31 : 0.45;
+    const balloonScale = THREE.MathUtils.damp(group.current.scale.x, targetScale, 5, delta);
+    group.current.scale.setScalar(balloonScale);
     if (!reducedMotion) {
       group.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.65) * 0.055;
       group.current.position.y += Math.sin(state.clock.elapsedTime * 0.9) * 0.003;
@@ -297,25 +412,42 @@ function Balloon({ progressRef, reducedMotion }) {
   });
 
   return (
-    <group ref={group} scale={0.72}>
+    <group ref={group} scale={0.45}>
       <mesh position={[0, 1.75, 0]} scale={[1.05, 1.35, 1.05]}>
         <icosahedronGeometry args={[1, 3]} />
-        <meshStandardMaterial color="#d77386" flatShading roughness={0.62} />
+        <meshStandardMaterial color="#c9677f" flatShading roughness={0.6} />
       </mesh>
-      <mesh position={[0, 1.76, 0.92]} scale={[0.2, 1.26, 0.04]}>
+      <mesh position={[0, 1.76, 1.02]} scale={[0.13, 1.25, 0.06]}>
         <sphereGeometry args={[1, 8, 6]} />
-        <meshStandardMaterial color="#f3c6b1" transparent opacity={0.68} />
+        <meshStandardMaterial color="#efb0b6" transparent opacity={0.82} />
       </mesh>
-      {[-0.42, 0.42].map((x) => (
-        <mesh key={x} position={[x, 0.5, 0]} rotation={[0, 0, x * -0.18]}>
+      <mesh position={[0, 1.76, -0.95]} scale={[0.24, 1.25, 0.035]}>
+        <sphereGeometry args={[1, 8, 6]} />
+        <meshStandardMaterial color="#e6a892" transparent opacity={0.64} />
+      </mesh>
+      <mesh position={[0, 0.58, 0]}>
+        <cylinderGeometry args={[0.13, 0.23, 0.34, 8]} />
+        <meshStandardMaterial color="#70483e" flatShading />
+      </mesh>
+      {[-0.43, 0.43].flatMap((x) => [-0.25, 0.25].map((z) => (
+        <mesh key={`${x}-${z}`} position={[x, 0.5, z]} rotation={[0, 0, x * -0.18]}>
           <cylinderGeometry args={[0.012, 0.012, 1.12, 5]} />
           <meshStandardMaterial color="#77594a" />
         </mesh>
-      ))}
+      )))}
       <mesh position={[0, -0.12, 0]}>
         <boxGeometry args={[0.72, 0.48, 0.62]} />
         <meshStandardMaterial color="#a7744d" flatShading />
       </mesh>
+      <mesh position={[0, -0.04, 0.318]}>
+        <boxGeometry args={[0.74, 0.055, 0.035]} />
+        <meshStandardMaterial color="#6f4b37" flatShading />
+      </mesh>
+      <mesh position={[0, -0.2, 0.318]}>
+        <boxGeometry args={[0.74, 0.045, 0.035]} />
+        <meshStandardMaterial color="#6f4b37" flatShading />
+      </mesh>
+      <pointLight color="#ffd19b" intensity={2.4} distance={2.5} position={[0, 0.56, 0]} />
     </group>
   );
 }
@@ -324,14 +456,14 @@ function Cloud({ position, scale = 1 }) {
   return (
     <group position={position} scale={scale}>
       {[
-        [-0.55, 0, 0],
-        [0, 0.16, 0],
-        [0.55, -0.02, 0],
-        [0.08, -0.18, 0.08],
+        [-0.42, 0, 0],
+        [0, 0.13, 0],
+        [0.42, -0.01, 0],
+        [0.06, -0.13, 0.06],
       ].map((point, index) => (
-        <mesh key={index} position={point} scale={index === 1 ? 0.85 : 0.66}>
+        <mesh key={index} position={point} scale={index === 1 ? 0.72 : 0.54}>
           <icosahedronGeometry args={[0.72, 2]} />
-          <meshStandardMaterial color="#fff9f3" transparent opacity={0.44} flatShading />
+          <meshStandardMaterial color="#fffaf5" transparent opacity={0.32} flatShading depthWrite={false} />
         </mesh>
       ))}
     </group>
@@ -364,7 +496,7 @@ function World({ progressRef, reducedMotion, started }) {
       <hemisphereLight args={["#fff4e5", "#294b4d", 2.5]} />
       <directionalLight position={[4, 8, 5]} intensity={1.8} color="#fff0df" />
       <Planet progressRef={progressRef} reducedMotion={reducedMotion} />
-      <Balloon progressRef={progressRef} reducedMotion={reducedMotion} />
+      {started && <Balloon progressRef={progressRef} reducedMotion={reducedMotion} />}
       <Cloud position={[-5.7, 3.4, 0]} scale={0.85} />
       <Cloud position={[5.3, 4.3, -1]} scale={1.05} />
       <Cloud position={[0.5, 5.1, -4.2]} scale={0.72} />
