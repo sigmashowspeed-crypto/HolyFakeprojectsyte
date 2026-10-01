@@ -128,7 +128,7 @@ function Finale({ active, celebrated }) {
         <p>{content.finale.letter}</p>
         <div className="letter-signature">
           <span>{content.finale.signature}</span>
-          <strong>Abdurahmon</strong>
+          <strong>{content.finale.signatureName}</strong>
         </div>
       </div>
       <Confetti visible={celebrated} />

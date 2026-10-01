@@ -58,6 +58,7 @@ export const content = {
     subtitle: "47 yosh - gullash pallasi 🌸",
     letter: "Aziz oyijonim! Bu saytni sizga sovg'a qilyapman, chunki oddiy so'zlar yetmaydi. Siz menga hayot berdingiz, yo'l ko'rsatdingiz va har doim menga ishondingiz. Sizga sog'lik, xotirjamlik, quvonch va yangi sayohatlar tilayman. Sizni juda yaxshi ko'raman. Sizning o'g'lingiz, Abdurahmon",
     signature: "Mehr bilan",
+    signatureName: "Abdurahmon",
   },
   progressLabel: "Sayohat",
   continueHint: "Davom etish uchun pastga suring",
