@@ -322,19 +322,27 @@ button {
 
 .stop-card {
   position: absolute;
-  top: 50%;
-  right: clamp(1.2rem, 7vw, 8rem);
-  width: min(37vw, 30rem);
-  padding: clamp(1.35rem, 3vw, 2.5rem);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 1.55rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.19), rgba(255, 255, 255, 0.075));
-  box-shadow: 0 24px 80px rgba(19, 15, 42, 0.2), inset 0 1px rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  bottom: max(1.75rem, var(--safe-bottom));
+  left: 50%;
+  display: grid;
+  grid-template-columns: minmax(11rem, 0.8fr) minmax(0, 1.8fr);
+  align-items: center;
+  gap: 1.75rem;
+  width: min(calc(100% - 3rem), 49rem);
+  padding: 1.35rem 1.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 1.4rem;
+  background: linear-gradient(125deg, rgba(39, 48, 54, 0.48), rgba(65, 56, 81, 0.36));
+  box-shadow: 0 16px 44px rgba(22, 23, 40, 0.18), inset 0 1px rgba(255, 255, 255, 0.17);
+  backdrop-filter: blur(14px) saturate(1.12);
+  -webkit-backdrop-filter: blur(14px) saturate(1.12);
   opacity: 0;
-  transform: translate(1.8rem, -44%) scale(0.97);
+  transform: translateX(-50%);
   overflow: hidden;
+}
+
+.stop-card-heading {
+  min-width: 0;
 }
 
 .stop-card::before {
@@ -351,14 +359,14 @@ button {
 
 .stop-card.is-active {
   opacity: 1;
-  transform: translate(0, -50%) scale(1);
+  transform: translateX(-50%);
   animation: card-arrive 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .stop-count {
   position: absolute;
-  top: 1.25rem;
-  right: 1.4rem;
+  top: 0.7rem;
+  right: 1rem;
   color: rgba(255, 255, 255, 0.48);
   font-family: "Playfair Display", serif;
   font-size: 0.74rem;
@@ -376,16 +384,16 @@ button {
 
 .stop-card h2 {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 3.9rem);
+  font-size: clamp(1.85rem, 2.5vw, 2.4rem);
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.035em;
 }
 
 .card-rule {
-  width: 3.6rem;
+  width: 2.5rem;
   height: 2px;
-  margin: 1.2rem 0;
+  margin: 0.75rem 0 0;
   border-radius: 2px;
   background: var(--accent);
   box-shadow: 0 0 18px var(--accent);
@@ -393,10 +401,13 @@ button {
 
 .stop-message {
   margin: 0;
-  color: rgba(255, 252, 248, 0.92);
-  font-size: clamp(0.92rem, 1.45vw, 1.12rem);
-  font-weight: 440;
+  padding-left: 1.75rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fffaf5;
+  font-size: clamp(0.92rem, 1.15vw, 1.03rem);
+  font-weight: 430;
   line-height: 1.65;
+  text-wrap: pretty;
 }
 
 .progress-nav {
@@ -482,9 +493,8 @@ button {
 .scroll-hint {
   position: absolute;
   bottom: var(--safe-bottom);
-  left: 50%;
+  right: 2rem;
   opacity: 1;
-  transform: translateX(-50%);
   transition: opacity 400ms ease;
 }
 
@@ -597,9 +607,7 @@ button {
 }
 
 .finale h2 {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: block;
   max-width: 64rem;
   margin: 0.8rem auto 0.55rem;
   font-size: clamp(2rem, 5.6vw, 5.8rem);
@@ -615,7 +623,12 @@ button {
   text-shadow: 0 8px 38px rgba(28, 18, 47, 0.38), 0 0 34px rgba(255, 204, 220, 0.18);
 }
 
-.finale h2 span {
+.finale-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.finale h2 .finale-letter {
   display: inline-block;
   opacity: 0;
   transform: translate(var(--x), var(--y)) rotate(calc((var(--i) - 18) * 1deg)) scale(0.45);
@@ -624,10 +637,6 @@ button {
     opacity 500ms calc(var(--i) * 24ms) ease,
     transform 900ms calc(var(--i) * 24ms) cubic-bezier(0.18, 0.82, 0.2, 1),
     filter 700ms calc(var(--i) * 24ms) ease;
-}
-
-.finale h2 .space {
-  width: 0.25em;
 }
 
 .finale-subtitle {
@@ -693,7 +702,7 @@ button {
 .finale.is-active .finale-flowers,
 .finale.is-active .finale-subtitle,
 .finale.is-active .letter,
-.finale.is-active h2 span {
+.finale.is-active h2 .finale-letter {
   opacity: 1;
   transform: translate(0, 0) rotate(0) scale(1);
   filter: blur(0);
@@ -743,8 +752,8 @@ button {
 }
 
 @keyframes card-arrive {
-  from { opacity: 0; transform: translate(1.25rem, -46%) scale(0.975); }
-  to { opacity: 1; transform: translate(0, -50%) scale(1); }
+  from { opacity: 0; transform: translate(-50%, 0.8rem); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 @keyframes petal-fall {
@@ -765,17 +774,32 @@ button {
     bottom: max(1rem, calc(var(--safe-bottom) + 0.5rem));
     left: 1rem;
     width: auto;
-    max-height: 38vh;
-    padding: 1.25rem 1.35rem;
-    overflow-x: hidden;
-    overflow-y: auto;
-    scrollbar-width: none;
+    display: block;
+    max-height: none;
+    padding: 1.1rem 1.3rem;
+    overflow: hidden;
     border-radius: 1.25rem;
     transform: translateY(1.4rem) scale(0.98);
   }
 
-  .stop-card::-webkit-scrollbar {
+  .stop-card-heading {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 0 0.65rem;
+  }
+
+  .stop-count {
     display: none;
+  }
+
+  .stop-flower {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    margin: 0;
+    font-size: 0.59rem;
+    letter-spacing: 0.14em;
   }
 
   .stop-card.is-active {
@@ -784,14 +808,19 @@ button {
   }
 
   .stop-card h2 {
-    font-size: clamp(1.9rem, 9vw, 2.8rem);
+    grid-column: 1;
+    grid-row: 1;
+    font-size: clamp(1.6rem, 6.7vw, 2.05rem);
   }
 
   .card-rule {
-    margin: 0.8rem 0;
+    grid-column: 1 / -1;
+    margin: 0.7rem 0;
   }
 
   .stop-message {
+    padding-left: 0;
+    border-left: 0;
     font-size: 0.86rem;
     line-height: 1.55;
   }
@@ -878,11 +907,11 @@ button {
 @media (max-height: 690px) and (max-width: 760px) {
   .stop-card {
     bottom: max(0.65rem, var(--safe-bottom));
-    max-height: 44vh;
+    padding: 1rem 1.1rem;
   }
 
   .stop-card h2 {
-    font-size: 1.75rem;
+    font-size: 1.6rem;
   }
 
   .stop-message {

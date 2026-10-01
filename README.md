@@ -22,6 +22,14 @@ Tayyor fayllar `dist` jildida paydo bo'ladi.
 
 ## Sayt manzili
 
-`main` tarmog'iga yuborilgan har bir yangilanish GitHub Pages orqali avtomatik nashr qilinadi:
+Hozirgi sayt VPS serverida ishlaydi:
 
-https://sigmashowspeed-crypto.github.io/HolyFakeprojectsyte/
+http://194.147.90.153:8747/
+
+Server ildizidan ishlaydigan nusxani tayyorlash:
+
+```bash
+npm run build -- --base ./
+```
+
+`dist` ichidagi fayllar `/var/www/nilufar47` jildiga joylashtiriladi. GitHub Pages uchun odatiy yig'ishdagi `/HolyFakeprojectsyte/` yo'li saqlangan; Pages nashri ombor administratorining sozlashini talab qiladi.

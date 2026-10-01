@@ -1,8 +1,8 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
-import JourneyScene from "./components/JourneyScene";
 import { content } from "./content";
 
+const JourneyScene = lazy(() => import("./components/JourneyScene"));
 const stopProgress = [0.05, 0.19, 0.33, 0.47, 0.61];
 
 function useReducedMotion() {
@@ -49,11 +49,13 @@ function Intro({ onBegin, introRef, launching }) {
 
 function StopCard({ stop, index, active }) {
   return (
-    <article className={`stop-card ${active ? "is-active" : ""}`} aria-hidden={!active}>
+    <article className={`stop-card ${active ? "is-active" : ""}`} style={{ "--accent": stop.accent }} aria-hidden={!active}>
       <div className="stop-count">0{index + 1}</div>
-      <p className="stop-flower">{stop.flower}</p>
-      <h2>{stop.place}</h2>
-      <div className="card-rule" style={{ "--accent": stop.accent }} />
+      <div className="stop-card-heading">
+        <p className="stop-flower">{stop.flower}</p>
+        <h2>{stop.place}</h2>
+        <div className="card-rule" />
+      </div>
       <p className="stop-message">{stop.message}</p>
     </article>
   );
@@ -107,19 +109,36 @@ function Confetti({ visible }) {
 }
 
 function Finale({ active, celebrated }) {
+  const words = useMemo(() => {
+    let offset = 0;
+    return content.finale.title.split(" ").map((word) => {
+      const result = { word, offset };
+      offset += Array.from(word).length + 1;
+      return result;
+    });
+  }, []);
   return (
     <section className={`finale ${active ? "is-active" : ""}`}>
       <div className="finale-flowers" aria-hidden="true">❀　✿　❀</div>
       <h2 aria-label={content.finale.title}>
-        {Array.from(content.finale.title).map((letter, index) => (
-          <span
-            key={`${letter}-${index}`}
-            className={letter === " " ? "space" : ""}
-            style={{ "--i": index, "--x": `${((index * 47) % 180) - 90}px`, "--y": `${((index * 31) % 120) - 60}px` }}
-            aria-hidden="true"
-          >
-            {letter}
-          </span>
+        {words.map(({ word, offset }, wordIndex) => (
+          <Fragment key={word}>
+            <span className="finale-word" aria-hidden="true">
+              {Array.from(word).map((letter, letterIndex) => {
+                const index = offset + letterIndex;
+                return (
+                  <span
+                    key={index}
+                    className="finale-letter"
+                    style={{ "--i": index, "--x": `${((index * 47) % 180) - 90}px`, "--y": `${((index * 31) % 120) - 60}px` }}
+                  >
+                    {letter}
+                  </span>
+                );
+              })}
+            </span>
+            {wordIndex < words.length - 1 && " "}
+          </Fragment>
         ))}
       </h2>
       <p className="finale-subtitle">{content.finale.subtitle}</p>
@@ -177,7 +196,7 @@ function App() {
         ? target
         : progressRef.current + (target - progressRef.current) * alpha;
       progressRef.current = next;
-      if (Math.abs(next - progressStateRef.current) > 0.0015 || next === target) {
+      if (Math.abs(next - progressStateRef.current) > 0.0015 || (next === target && next !== progressStateRef.current)) {
         progressStateRef.current = next;
         setProgress(next);
       }
